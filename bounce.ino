@@ -10,8 +10,10 @@ LedControl lc = LedControl(12, 10, 11, 1);
 unsigned long delaytime1 = 500;
 unsigned long delaytime2 = 50;
 
-int buttonApin = 3;
-int buttonBpin = 4;
+int buttonA1pin = 3;
+int buttonA2pin = 4;
+int buttonB1pin = 5;
+int buttonB2pin = 6;
 
 unsigned long previousMillis = millis();
 
@@ -19,7 +21,8 @@ unsigned long previousMillis = millis();
 const int COL = 0;
 const int ROW = 1;
 
-const int BOUNCER_START_POS = 4;
+const int BOUNCER_A_START_POS = 4;
+const int BOUNCER_B_START_POS = 4;
 
 const int BALL_START_POS_COL = 4;
 const int BALL_START_POS_ROW = 1;
@@ -29,16 +32,28 @@ const int BALL_START_VECTOR_ROW = 1;
 
 
 int ballPos[2] = {BALL_START_POS_COL, BALL_START_POS_ROW};
-int bouncerPos = BOUNCER_START_POS;
+int bouncerAPos = BOUNCER_A_START_POS;
+int bouncerBPos = BOUNCER_B_START_POS;
 int ballVector[2] = {BALL_START_VECTOR_COL, BALL_START_VECTOR_ROW};
 
+int pointsA=0;
+int pointsB=0;
 
-int buttonAState = HIGH;
-int buttonBState = HIGH;
-int lastButtonAState = LOW;
-int lastButtonBState = LOW;
-unsigned long lastDebounceATime = 0;
-unsigned long lastDebounceBTime = 0;
+int buttonA1State = HIGH;
+int buttonA2State = HIGH;
+int lastButtonA1State = LOW;
+int lastButtonA2State = LOW;
+unsigned long lastDebounceA1Time = 0;
+unsigned long lastDebounceA2Time = 0;
+
+int buttonB1State = HIGH;
+int buttonB2State = HIGH;
+int lastButtonB1State = LOW;
+int lastButtonB2State = LOW;
+unsigned long lastDebounceB1Time = 0;
+unsigned long lastDebounceB2Time = 0;
+
+
 unsigned long debounceDelay = 50;
 
 
@@ -51,8 +66,10 @@ void setup() {
   /* and clear the display */
   lc.clearDisplay(0);
 
-  pinMode(buttonApin, INPUT_PULLUP);
-  pinMode(buttonBpin, INPUT_PULLUP);
+  pinMode(buttonA1pin, INPUT_PULLUP);
+  pinMode(buttonA2pin, INPUT_PULLUP);
+  pinMode(buttonB1pin, INPUT_PULLUP);
+  pinMode(buttonB2pin, INPUT_PULLUP);
 }
 
 
@@ -60,20 +77,26 @@ void setup() {
 
 void render() {
   lc.clearDisplay(0);
+  // bouncerB
+  lc.setLed(0, 0, bouncerBPos, true);
+  lc.setLed(0, 0, bouncerBPos + 1, true);
+  lc.setLed(0, 0, bouncerBPos + 2, true);
+  
+  // bouncerA
+  lc.setLed(0, 7, bouncerAPos, true);
+  lc.setLed(0, 7, bouncerAPos + 1, true);
+  lc.setLed(0, 7, bouncerAPos + 2, true);
+
   // ball
   lc.setLed(0, ballPos[0], ballPos[1], true);
-
-  // bouncer
-  lc.setLed(0, 7, bouncerPos, true);
-  lc.setLed(0, 7, bouncerPos + 1, true);
-  lc.setLed(0, 7, bouncerPos + 2, true);
-
 }
 
 unsigned long lastRead = millis();
 
-void handleBouncerHit() {
-  if (ballPos[COL] == 6) {
+
+
+void handleBouncerHit(int bouncerPos, int bouncerHitCOL) {
+  if (ballPos[COL] == bouncerHitCOL) {
     if (ballPos[ROW] == bouncerPos || ballPos[ROW] == bouncerPos + 1 || ballPos[ROW] == bouncerPos + 2) {
       // middle hit
       ballVector[COL] = ballVector[COL] * -1;
@@ -88,8 +111,11 @@ void handleBouncerHit() {
       ballVector[COL] = ballVector[COL] * -1;
       ballVector[ROW] = -1;
     }
-
   }
+}
+void handleAllBouncerHit() {
+  handleBouncerHit(bouncerAPos, 6);
+  handleBouncerHit(bouncerBPos, 1);
 }
 
 void handleWallHit() {
@@ -102,65 +128,112 @@ void handleWallHit() {
   }
 }
 
-void handleHitA() {
+void handleBLostBall() {
   if (ballPos[0] <= 0) {
+    pointsA += 1;
+    Serial.print("B lost a ball! ");
+    Serial.print(pointsA);
+    Serial.print(":");
+    Serial.println(pointsB);
     ballPos[COL] = BALL_START_POS_COL;
     ballPos[ROW] = BALL_START_POS_ROW;
-    bouncerPos = BOUNCER_START_POS;
+    bouncerAPos = BOUNCER_A_START_POS;
+    bouncerBPos = BOUNCER_B_START_POS;
     ballVector[COL] = BALL_START_VECTOR_COL;
     ballVector[ROW] = BALL_START_VECTOR_ROW;
   }
 }
 
-void handleHitB() {
+void handleALostBall() {
   if (ballPos[COL] >= 7) {
+    pointsB += 1;
+    Serial.print("A lost a ball! ");
+    Serial.print(pointsA);
+    Serial.print(":");
+    Serial.println(pointsB);
     ballPos[COL] = BALL_START_POS_COL;
     ballPos[ROW] = BALL_START_POS_ROW;
-    bouncerPos = BOUNCER_START_POS;
+    bouncerAPos = BOUNCER_A_START_POS;
+    bouncerBPos = BOUNCER_B_START_POS;
     ballVector[COL] = BALL_START_VECTOR_COL;
     ballVector[ROW] = BALL_START_VECTOR_ROW;
   }
 }
 
-void handlePuttons() {
-    int a = digitalRead(buttonApin);
-  if (a != lastButtonAState) {
-    // reset the debouncing timer
-    lastDebounceATime = millis();
-  }
-  if ((millis() - lastDebounceATime) > debounceDelay) {
-    if (a != buttonAState) {
-      buttonAState = a;
+void handleButtons() {
 
-      Serial.print("buttonAState: ");
-      Serial.println(buttonAState);
-      if (buttonAState == LOW) {
-        if (bouncerPos + 1 < 6) {
-          bouncerPos += 1;
+  /* ---- A -----*/
+  int a1 = digitalRead(buttonA1pin);
+  if (a1 != lastButtonA1State) {
+    // reset the debouncing timer
+    lastDebounceA1Time = millis();
+  }
+  if ((millis() - lastDebounceA1Time) > debounceDelay) {
+    if (a1 != buttonA1State) {
+      buttonA1State = a1;
+      if (buttonA1State == LOW) {
+        if (bouncerAPos + 1 < 6) {
+          bouncerAPos += 1;
         }
       }
     }
   }
-  lastButtonAState = a;
+  lastButtonA1State = a1;
 
-  int b = digitalRead(buttonBpin);
-  if (b != lastButtonBState) {
+  int a2 = digitalRead(buttonA2pin);
+  if (a2 != lastButtonA2State) {
     // reset the debouncing timer
-    lastDebounceBTime = millis();
+    lastDebounceA2Time = millis();
   }
-  if ((millis() - lastDebounceBTime) > debounceDelay) {
-    if (b != buttonBState) {
-      buttonBState = b;
-      Serial.print("buttonBState: ");
-      Serial.println(buttonBState);
-      if (buttonBState == LOW) {
-        if (bouncerPos - 1 >= 0) {
-          bouncerPos -= 1;
+  if ((millis() - lastDebounceA2Time) > debounceDelay) {
+    if (a2 != buttonA2State) {
+      buttonA2State = a2;
+      if (buttonA2State == LOW) {
+        if (bouncerAPos - 1 >= 0) {
+          bouncerAPos -= 1;
         }
       }
     }
   }
-  lastButtonBState = b;
+  lastButtonA2State = a2;
+
+
+/* ---- B -----*/
+
+
+  int b1 = digitalRead(buttonB1pin);
+  if (b1 != lastButtonB1State) {
+    // reset the debouncing timer
+    lastDebounceB1Time = millis();
+  }
+  if ((millis() - lastDebounceB1Time) > debounceDelay) {
+    if (b1 != buttonB1State) {
+      buttonB1State = b1;
+      if (buttonB1State == LOW) {
+        if (bouncerBPos + 1 < 6) {
+          bouncerBPos += 1;
+        }
+      }
+    }
+  }
+  lastButtonB1State = b1;
+
+  int b2 = digitalRead(buttonB2pin);
+  if (b2 != lastButtonB2State) {
+    // reset the debouncing timer
+    lastDebounceB2Time = millis();
+  }
+  if ((millis() - lastDebounceB2Time) > debounceDelay) {
+    if (b2 != buttonB2State) {
+      buttonB2State = b2;
+      if (buttonB2State == LOW) {
+        if (bouncerBPos - 1 >= 0) {
+          bouncerBPos -= 1;
+        }
+      }
+    }
+  }
+  lastButtonB2State = b2;
 
 }
 
@@ -181,13 +254,13 @@ void loop() {
       ballPos[ROW] = 0;
     }
 
-    handleBouncerHit();
+    handleAllBouncerHit();
     handleWallHit();
-    handleHitA();
-    handleHitB();
+    handleALostBall();
+    handleBLostBall();
     previousMillis = currentMillis;
   }
 
-  handlePuttons();
+  handleButtons();
   render();
 }
