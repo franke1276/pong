@@ -36,8 +36,8 @@ int bouncerAPos = BOUNCER_A_START_POS;
 int bouncerBPos = BOUNCER_B_START_POS;
 int ballVector[2] = {BALL_START_VECTOR_COL, BALL_START_VECTOR_ROW};
 
-int pointsA=0;
-int pointsB=0;
+int pointsA = 0;
+int pointsB = 0;
 
 int buttonA1State = HIGH;
 int buttonA2State = HIGH;
@@ -57,6 +57,27 @@ unsigned long lastDebounceB2Time = 0;
 unsigned long debounceDelay = 50;
 
 
+const byte NUMBERS[10][5] = {
+  {B00000111, B00000101, B00000101, B00000101, B00000111},
+  {B00000010, B00000010, B00000010, B00000010, B00000010},
+  {B00000111, B00000001, B00000111, B00000100, B00000111},
+  {B00000111, B00000001, B00000111, B00000001, B00000111},
+  {B00000101, B00000101, B00000111, B00000001, B00000001},
+  {B00000111, B00000100, B00000111, B00000001, B00000111},
+  {B00000111, B00000100, B00000111, B00000101, B00000111},
+  {B00000111, B00000100, B00000010, B00000010, B00000010},
+  {B00000111, B00000101, B00000111, B00000101, B00000111},
+  {B00000111, B00000101, B00000111, B00000001, B00000111}
+
+};
+void showResult() {
+  lc.clearDisplay(0);
+  for (int i = 0; i < 5; i++) {
+    lc.setRow(0, i + 1, (NUMBERS[pointsA][i] << 5)| (NUMBERS[pointsB][i]));
+  }
+  delay(4000);
+}
+
 void setup() {
   Serial.begin(9600);
 
@@ -70,6 +91,7 @@ void setup() {
   pinMode(buttonA2pin, INPUT_PULLUP);
   pinMode(buttonB1pin, INPUT_PULLUP);
   pinMode(buttonB2pin, INPUT_PULLUP);
+
 }
 
 
@@ -81,7 +103,7 @@ void render() {
   lc.setLed(0, 0, bouncerBPos, true);
   lc.setLed(0, 0, bouncerBPos + 1, true);
   lc.setLed(0, 0, bouncerBPos + 2, true);
-  
+
   // bouncerA
   lc.setLed(0, 7, bouncerAPos, true);
   lc.setLed(0, 7, bouncerAPos + 1, true);
@@ -135,6 +157,7 @@ void handleBLostBall() {
     Serial.print(pointsA);
     Serial.print(":");
     Serial.println(pointsB);
+    showResult();
     ballPos[COL] = BALL_START_POS_COL;
     ballPos[ROW] = BALL_START_POS_ROW;
     bouncerAPos = BOUNCER_A_START_POS;
@@ -151,6 +174,7 @@ void handleALostBall() {
     Serial.print(pointsA);
     Serial.print(":");
     Serial.println(pointsB);
+    showResult();
     ballPos[COL] = BALL_START_POS_COL;
     ballPos[ROW] = BALL_START_POS_ROW;
     bouncerAPos = BOUNCER_A_START_POS;
@@ -198,7 +222,7 @@ void handleButtons() {
   lastButtonA2State = a2;
 
 
-/* ---- B -----*/
+  /* ---- B -----*/
 
 
   int b1 = digitalRead(buttonB1pin);
