@@ -36,7 +36,7 @@ int bouncerAPos = BOUNCER_A_START_POS;
 int bouncerBPos = BOUNCER_B_START_POS;
 int ballVector[2] = {BALL_START_VECTOR_COL, BALL_START_VECTOR_ROW};
 
-int pointsA = 0;
+int pointsA = 8;
 int pointsB = 0;
 
 int buttonA1State = HIGH;
@@ -65,13 +65,47 @@ const byte NUMBERS[10][5] = {
   {B00000101, B00000101, B00000111, B00000001, B00000001},
   {B00000111, B00000100, B00000111, B00000001, B00000111},
   {B00000111, B00000100, B00000111, B00000101, B00000111},
-  {B00000111, B00000100, B00000010, B00000010, B00000010},
+  {B00000111, B00000001, B00000010, B00000010, B00000010},
   {B00000111, B00000101, B00000111, B00000101, B00000111},
   {B00000111, B00000101, B00000111, B00000001, B00000111}
-
 };
+
+const byte A[8] = {B00000000, B00011000, B00100100, B00100100, B00111100, B00100100, B00100100, B00100100};
+
+const byte B[8] = {B00000000, B00111000, B00100100, B00100100, B00111000, B00100100, B00100100, B00111000};
+
+void showWinner(byte* winner) {
+  for (int i = 0; i < 8; i++) {
+    lc.setRow(0, i , winner[i]);
+  }
+}
+
+
+void showWon(byte* winner) {
+  lc.clearDisplay(0);
+  for (int i=0; i< 4;i++){
+    showWinner(winner);  
+    delay(500);
+    lc.clearDisplay(0);
+    delay(500);
+  }
+}
+
+
 void showResult() {
   lc.clearDisplay(0);
+  if (pointsA > 9) {
+    Serial.println("A won!");
+    showWon(A);
+    pointsA = 0;
+    pointsB = 0;
+  }
+  if (pointsB > 9) {
+    Serial.println("B won!");
+    showWon(B);
+    pointsA = 0;
+    pointsB = 0;
+  }
   for (int i = 0; i < 5; i++) {
     lc.setRow(0, i + 1, (NUMBERS[pointsA][i] << 5)| (NUMBERS[pointsB][i]));
   }
