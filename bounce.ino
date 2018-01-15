@@ -109,7 +109,8 @@ void showResult() {
   for (int i = 0; i < 5; i++) {
     lc.setRow(0, i + 1, (NUMBERS[pointsA][i] << 5)| (NUMBERS[pointsB][i]));
   }
-  delay(4000);
+  delay(2000);
+  lc.clearDisplay(0);
 }
 
 void setup() {
@@ -129,22 +130,39 @@ void setup() {
 }
 
 
+int prevBouncerAPos = 0;
+int prevBouncerBPos = 0;
+
+int prevBallPos[2] = {BALL_START_POS_COL, BALL_START_POS_ROW};
 
 
 void render() {
-  lc.clearDisplay(0);
-  // bouncerB
+  
+  lc.setLed(0, 0, prevBouncerBPos, false);
+  lc.setLed(0, 0, prevBouncerBPos + 1, false);
+  lc.setLed(0, 0, prevBouncerBPos + 2, false);
+
   lc.setLed(0, 0, bouncerBPos, true);
   lc.setLed(0, 0, bouncerBPos + 1, true);
   lc.setLed(0, 0, bouncerBPos + 2, true);
 
-  // bouncerA
+  
+  lc.setLed(0, 7, prevBouncerAPos, false);
+  lc.setLed(0, 7, prevBouncerAPos + 1, false);
+  lc.setLed(0, 7, prevBouncerAPos + 2, false);
+  
   lc.setLed(0, 7, bouncerAPos, true);
   lc.setLed(0, 7, bouncerAPos + 1, true);
   lc.setLed(0, 7, bouncerAPos + 2, true);
 
+  
+  lc.setLed(0, prevBallPos[COL], prevBallPos[ROW], false);
   // ball
-  lc.setLed(0, ballPos[0], ballPos[1], true);
+  lc.setLed(0, ballPos[COL], ballPos[ROW], true);
+  prevBouncerAPos = bouncerAPos;
+  prevBouncerBPos = bouncerBPos;
+  prevBallPos[COL] = ballPos[COL];
+  prevBallPos[ROW] = ballPos[ROW];
 }
 
 unsigned long lastRead = millis();
