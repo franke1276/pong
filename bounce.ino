@@ -18,25 +18,25 @@ int buttonB2pin = 6;
 unsigned long previousMillis = millis();
 
 
-const int COL = 0;
-const int ROW = 1;
+const int ROW = 0;
+const int COL = 1;
 
 const int BOUNCER_A_START_POS = 4;
 const int BOUNCER_B_START_POS = 4;
 
-const int BALL_START_POS_COL = 4;
-const int BALL_START_POS_ROW = 1;
+const int BALL_START_POS_ROW = 4;
+const int BALL_START_POS_COL = 1;
 
-const int BALL_START_VECTOR_COL = 1;
 const int BALL_START_VECTOR_ROW = 1;
+const int BALL_START_VECTOR_COL = 1;
 
 
-int ballPos[2] = {BALL_START_POS_COL, BALL_START_POS_ROW};
+int ballPos[2] = {BALL_START_POS_ROW, BALL_START_POS_COL};
 int bouncerAPos = BOUNCER_A_START_POS;
 int bouncerBPos = BOUNCER_B_START_POS;
-int ballVector[2] = {BALL_START_VECTOR_COL, BALL_START_VECTOR_ROW};
+int ballVector[2] = {BALL_START_VECTOR_ROW, BALL_START_VECTOR_COL};
 
-int pointsA = 8;
+int pointsA = 7;
 int pointsB = 0;
 
 int buttonA1State = HIGH;
@@ -133,7 +133,7 @@ void setup() {
 int prevBouncerAPos = 0;
 int prevBouncerBPos = 0;
 
-int prevBallPos[2] = {BALL_START_POS_COL, BALL_START_POS_ROW};
+int prevBallPos[2] = {BALL_START_POS_ROW, BALL_START_POS_COL};
 
 
 void render() {
@@ -156,34 +156,34 @@ void render() {
   lc.setLed(0, 7, bouncerAPos + 2, true);
 
   
-  lc.setLed(0, prevBallPos[COL], prevBallPos[ROW], false);
+  lc.setLed(0, prevBallPos[ROW], prevBallPos[COL], false);
   // ball
-  lc.setLed(0, ballPos[COL], ballPos[ROW], true);
+  lc.setLed(0, ballPos[ROW], ballPos[COL], true);
   prevBouncerAPos = bouncerAPos;
   prevBouncerBPos = bouncerBPos;
-  prevBallPos[COL] = ballPos[COL];
   prevBallPos[ROW] = ballPos[ROW];
+  prevBallPos[COL] = ballPos[COL];
 }
 
 unsigned long lastRead = millis();
 
 
 
-void handleBouncerHit(int bouncerPos, int bouncerHitCOL) {
-  if (ballPos[COL] == bouncerHitCOL) {
-    if (ballPos[ROW] == bouncerPos || ballPos[ROW] == bouncerPos + 1 || ballPos[ROW] == bouncerPos + 2) {
+void handleBouncerHit(int bouncerPos, int bouncerHitROW) {
+  if (ballPos[ROW] == bouncerHitROW) {
+    if (ballPos[COL] == bouncerPos || ballPos[COL] == bouncerPos + 1 || ballPos[COL] == bouncerPos + 2) {
       // middle hit
-      ballVector[COL] = ballVector[COL] * -1;
+      ballVector[ROW] = ballVector[ROW] * -1;
     }
-    if ((ballPos[ROW] == (bouncerPos + 3)) && (ballVector[ROW] == -1)) {
+    if ((ballPos[COL] == (bouncerPos + 3)) && (ballVector[COL] == -1)) {
       // right edge hit
-      ballVector[COL] = ballVector[COL] * -1;
-      ballVector[ROW] = 1;
+      ballVector[ROW] = ballVector[ROW] * -1;
+      ballVector[COL] = 1;
     }
-    if ((ballPos[ROW] == (bouncerPos - 1)) && (ballVector[ROW] == 1)) {
+    if ((ballPos[COL] == (bouncerPos - 1)) && (ballVector[COL] == 1)) {
       // right edge hit
-      ballVector[COL] = ballVector[COL] * -1;
-      ballVector[ROW] = -1;
+      ballVector[ROW] = ballVector[ROW] * -1;
+      ballVector[COL] = -1;
     }
   }
 }
@@ -193,12 +193,12 @@ void handleAllBouncerHit() {
 }
 
 void handleWallHit() {
-  if (ballPos[ROW] >= 7 ) {
-    ballVector[ROW] = ballVector[ROW] * -1;
+  if (ballPos[COL] >= 7 ) {
+    ballVector[COL] = ballVector[COL] * -1;
   }
 
-  if (ballPos[ROW] <= 0 ) {
-    ballVector[ROW] = ballVector[ROW] * -1;
+  if (ballPos[COL] <= 0 ) {
+    ballVector[COL] = ballVector[COL] * -1;
   }
 }
 
@@ -210,29 +210,29 @@ void handleBLostBall() {
     Serial.print(":");
     Serial.println(pointsB);
     showResult();
-    ballPos[COL] = BALL_START_POS_COL;
     ballPos[ROW] = BALL_START_POS_ROW;
+    ballPos[COL] = BALL_START_POS_COL;
     bouncerAPos = BOUNCER_A_START_POS;
     bouncerBPos = BOUNCER_B_START_POS;
-    ballVector[COL] = BALL_START_VECTOR_COL;
     ballVector[ROW] = BALL_START_VECTOR_ROW;
+    ballVector[COL] = BALL_START_VECTOR_COL;
   }
 }
 
 void handleALostBall() {
-  if (ballPos[COL] >= 7) {
+  if (ballPos[ROW] >= 7) {
     pointsB += 1;
     Serial.print("A lost a ball! ");
     Serial.print(pointsA);
     Serial.print(":");
     Serial.println(pointsB);
     showResult();
-    ballPos[COL] = BALL_START_POS_COL;
     ballPos[ROW] = BALL_START_POS_ROW;
+    ballPos[COL] = BALL_START_POS_COL;
     bouncerAPos = BOUNCER_A_START_POS;
     bouncerBPos = BOUNCER_B_START_POS;
-    ballVector[COL] = BALL_START_VECTOR_COL;
     ballVector[ROW] = BALL_START_VECTOR_ROW;
+    ballVector[COL] = BALL_START_VECTOR_COL;
   }
 }
 
@@ -318,16 +318,16 @@ void loop() {
   unsigned long currentMillis = millis();
 
   if ((currentMillis - previousMillis) > 1000) {
-    ballPos[COL] = (ballPos[COL] + ballVector[COL]);
     ballPos[ROW] = (ballPos[ROW] + ballVector[ROW]);
-    if (ballPos[COL] > 200) {
-      // uebelauf
-      ballPos[COL] = 0;
-    }
-
+    ballPos[COL] = (ballPos[COL] + ballVector[COL]);
     if (ballPos[ROW] > 200) {
       // uebelauf
       ballPos[ROW] = 0;
+    }
+
+    if (ballPos[COL] > 200) {
+      // uebelauf
+      ballPos[COL] = 0;
     }
 
     handleAllBouncerHit();
