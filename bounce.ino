@@ -3,17 +3,23 @@
 
 //We always have to include the library
 #include "LedControl.h"
-
+#include "pitches.h"
 LedControl lc = LedControl(12, 10, 11, 1);
 
 /* we always wait a bit between updates of the display */
 unsigned long delaytime1 = 500;
 unsigned long delaytime2 = 50;
 
+int melody[] = {
+  NOTE_C5, NOTE_D5, NOTE_E5, NOTE_F5, NOTE_G5, NOTE_A5, NOTE_B5, NOTE_C6};
+
+
 int buttonA1pin = 3;
 int buttonA2pin = 4;
 int buttonB1pin = 5;
 int buttonB2pin = 6;
+
+int soundPin = 8;
 
 unsigned long previousMillis = millis();
 
@@ -36,7 +42,7 @@ int bouncerAPos = BOUNCER_A_START_POS;
 int bouncerBPos = BOUNCER_B_START_POS;
 int ballVector[2] = {BALL_START_VECTOR_ROW, BALL_START_VECTOR_COL};
 
-int pointsA = 7;
+int pointsA = 9;
 int pointsB = 0;
 
 int buttonA1State = HIGH;
@@ -84,8 +90,11 @@ void showWinner(byte* winner) {
 void showWon(byte* winner) {
   lc.clearDisplay(0);
   for (int i=0; i< 4;i++){
-    showWinner(winner);  
-    delay(500);
+    showWinner(winner); 
+    for (int i=0;i<8;i++){
+      tone(soundPin,melody[i], 1000/16);
+      delay(1000/16 * 1.3);   
+    }
     lc.clearDisplay(0);
     delay(500);
   }
@@ -109,6 +118,7 @@ void showResult() {
   for (int i = 0; i < 5; i++) {
     lc.setRow(0, i + 1, (NUMBERS[pointsA][i] << 5)| (NUMBERS[pointsB][i]));
   }
+  tone(soundPin,NOTE_C5, 1000/4);
   delay(2000);
   lc.clearDisplay(0);
 }
@@ -126,6 +136,8 @@ void setup() {
   pinMode(buttonA2pin, INPUT_PULLUP);
   pinMode(buttonB1pin, INPUT_PULLUP);
   pinMode(buttonB2pin, INPUT_PULLUP);
+
+  pinMode(soundPin, OUTPUT);
 
 }
 
@@ -317,7 +329,7 @@ void loop() {
 
   unsigned long currentMillis = millis();
 
-  if ((currentMillis - previousMillis) > 1000) {
+  if ((currentMillis - previousMillis) > 500) {
     ballPos[ROW] = (ballPos[ROW] + ballVector[ROW]);
     ballPos[COL] = (ballPos[COL] + ballVector[COL]);
     if (ballPos[ROW] > 200) {
@@ -335,6 +347,7 @@ void loop() {
     handleALostBall();
     handleBLostBall();
     previousMillis = currentMillis;
+    tone(soundPin,NOTE_C6, 1000/16);
   }
 
   handleButtons();
